@@ -1,0 +1,18 @@
+-@ val userInfo: org.springframework.security.oauth.examples.tonr.UserInfo
+
+!!! 5
+html(lang="en")
+  head
+    link(href={uri("/main.css")} rel="stylesheet" type="text/css")
+    title tonr
+  body
+    .container
+      ul#mainlinks
+      li
+        a(href={uri("/index.jsp")}) home
+      li
+        a.selected(href={uri("/account")}) account
+
+  #content
+    h1 Your Account
+    p Your username is #{userInfo.getUserId()}

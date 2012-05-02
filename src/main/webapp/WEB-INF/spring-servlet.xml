@@ -40,23 +40,11 @@
   <mvc:annotation-driven />
 
 	<mvc:default-servlet-handler />
-
-	<bean id="contentViewResolver" class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
-		<property name="mediaTypes">
-			<map>
-				<entry key="json" value="application/json" />
-			</map>
-		</property>
-		<property name="defaultViews">
-			<bean class="org.springframework.web.servlet.view.json.MappingJacksonJsonView"/>
-		</property>
-	</bean>
-
-	<!--Basic application beans. -->
-	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-		<property name="prefix" value="/WEB-INF/jsp/" />
-		<property name="suffix" value=".jsp" />
-	</bean>
+  
+  <bean class="org.fusesource.scalate.spring.view.ScalateViewResolver">
+    <property name="prefix" value="/WEB-INF/views/scalate/" />
+    <property name="suffix" value=".jade" />
+  </bean>
 
 	<bean id="accountController" class="org.springframework.security.oauth.examples.tonr.mvc.AccountController">
 		<property name="accountService" ref="accountService" />
