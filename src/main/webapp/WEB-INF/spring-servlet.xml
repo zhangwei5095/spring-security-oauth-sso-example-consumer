@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:sec="http://www.springframework.org/schema/security"
+	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+    
+  <context:property-placeholder location="classpath:/oauth2.properties"/>
+
+	<http access-denied-page="/login.jsp" xmlns="http://www.springframework.org/schema/security">
+		<intercept-url pattern="/account" access="ROLE_USER" />
+		<intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+
+		<form-login authentication-failure-url="/login.jsp" default-target-url="/index.jsp" login-page="/login.jsp"
+			login-processing-url="/login.do" />
+		<logout logout-success-url="/index.jsp" logout-url="/logout.do" />
+		<anonymous />
+		<custom-filter ref="oauth2ClientFilter" after="EXCEPTION_TRANSLATION_FILTER" />
+	</http>
+
+	<authentication-manager xmlns="http://www.springframework.org/schema/security">
+		<authentication-provider>
+			<user-service>
+				<user name="marissa" password="wombat" authorities="ROLE_USER" />
+				<user name="sam" password="kangaroo" authorities="ROLE_USER" />
+			</user-service>
+		</authentication-provider>
+	</authentication-manager>
+
+	<!--apply the oauth client context -->
+	<oauth:client id="oauth2ClientFilter" redirect-on-error="${redirectOnError:false}" />
+
+	<oauth:resource id="oauth2Resource" type="authorization_code" client-id="tonr" client-secret="secret" 
+		access-token-uri="${accessTokenUri}" user-authorization-uri="${userAuthorizationUri}" scope="read" />
+  
+  <mvc:annotation-driven />
+
+	<mvc:default-servlet-handler />
+
+	<bean id="contentViewResolver" class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="mediaTypes">
+			<map>
+				<entry key="json" value="application/json" />
+			</map>
+		</property>
+		<property name="defaultViews">
+			<bean class="org.springframework.web.servlet.view.json.MappingJacksonJsonView"/>
+		</property>
+	</bean>
+
+	<!--Basic application beans. -->
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+
+	<bean id="accountController" class="org.springframework.security.oauth.examples.tonr.mvc.AccountController">
+		<property name="accountService" ref="accountService" />
+	</bean>
+
+	<bean id="accountService" class="org.springframework.security.oauth.examples.tonr.impl.AccountServiceImpl">
+		<property name="accountDetailsURL" value="${accountDetailsURL}" />
+		<property name="oAuthRestTemplate">
+			<bean class="org.springframework.security.oauth2.client.OAuth2RestTemplate">
+				<constructor-arg ref="oauth2Resource" />
+			</bean>
+		</property>
+	</bean>
+
+</beans>
