@@ -46,7 +46,7 @@
 	<mvc:default-servlet-handler />
   
   <bean class="org.fusesource.scalate.spring.view.ScalateViewResolver">
-    <property name="prefix" value="/WEB-INF/views/scalate/" />
+    <property name="prefix" value="/WEB-INF/scalate/views/" />
     <property name="suffix" value=".jade" />
   </bean>
 

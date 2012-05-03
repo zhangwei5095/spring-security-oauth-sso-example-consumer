@@ -1,0 +1,19 @@
+-@ val body: String
+-@ val title: String
+
+!!! 5
+html(lang="en")
+  head
+    link(href={uri("/main.css")} rel="stylesheet" type="text/css")
+    title #{title} | OAuth 2 Consumer Example
+  body
+    #container
+      ul#mainlinks
+        li
+          a(href={uri("/index.jsp")}) home
+        li
+          a.selected(href={uri("/account")}) account
+
+      #content
+        | #{unescape(body)}
+    
