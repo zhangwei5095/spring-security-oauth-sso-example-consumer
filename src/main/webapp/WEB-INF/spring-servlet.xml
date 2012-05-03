@@ -1,66 +1,74 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:mvc="http://www.springframework.org/schema/mvc"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
   xmlns:sec="http://www.springframework.org/schema/security"
-	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd
+  xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xsi:schemaLocation="http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd
 		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
 		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
-    
-  <context:property-placeholder location="classpath:/oauth2.properties"/>
 
-	<http xmlns="http://www.springframework.org/schema/security" entry-point-ref="loginEntryPoint"
-    disable-url-rewriting="true">
-		<intercept-url pattern="/**" access="ROLE_USER" />
-		<logout logout-success-url="/index.jsp" logout-url="/logout" />
+  <context:property-placeholder location="classpath:/oauth2.properties" />
+
+  <http xmlns="http://www.springframework.org/schema/security"
+    entry-point-ref="loginEntryPoint" disable-url-rewriting="true">
+    <intercept-url pattern="/**" access="ROLE_USER" />
+    <logout logout-success-url="/index.jsp" logout-url="/logout" />
     <anonymous enabled="false" />
     <custom-filter ref="oauthExceptionFilter" after="EXCEPTION_TRANSLATION_FILTER" />
     <custom-filter ref="oauthSSOFilter" before="FILTER_SECURITY_INTERCEPTOR" />
-	</http>
+  </http>
 
-  <bean id="loginEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+  <bean id="loginEntryPoint"
+    class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
     <constructor-arg value="/login" />
   </bean>
 
-  <sec:authentication-manager alias="authenticationManager"/>
+  <sec:authentication-manager alias="authenticationManager" />
 
-	<!--apply the oauth client context -->
-	<oauth:client id="oauthExceptionFilter" />
-  
-  <bean id="oauthSSOFilter" class="org.springframework.security.oauth.examples.tonr.OAuthSSOFilter">
+  <!--apply the oauth client context -->
+  <oauth:client id="oauthExceptionFilter" />
+
+  <bean id="oauthSSOFilter"
+    class="org.springframework.security.oauth.examples.tonr.OAuthSSOFilter">
     <constructor-arg value="/login" />
     <property name="authenticationManager" ref="authenticationManager" />
     <property name="restTemplate" ref="oauth2RestTemplate" />
     <property name="userInfoUrl" value="${accountDetailsURL}" />
   </bean>
 
-	<oauth:resource id="api" type="authorization_code" client-id="tonr" client-secret="secret" 
-		access-token-uri="${accessTokenUri}" user-authorization-uri="${userAuthorizationUri}" scope="read" />
-  
+  <oauth:resource id="api" type="authorization_code"
+    client-id="tonr" client-secret="secret" access-token-uri="${accessTokenUri}"
+    user-authorization-uri="${userAuthorizationUri}" scope="read" />
+
   <mvc:annotation-driven />
 
-	<mvc:default-servlet-handler />
-  
+  <mvc:default-servlet-handler />
+
   <bean class="org.fusesource.scalate.spring.view.ScalateViewResolver">
     <property name="prefix" value="/WEB-INF/scalate/views/" />
     <property name="suffix" value=".jade" />
   </bean>
-
-	<bean id="accountController" class="org.springframework.security.oauth.examples.tonr.mvc.AccountController">
-		<property name="accountService" ref="accountService" />
-	</bean>
   
-  <bean id="oauth2RestTemplate" class="org.springframework.security.oauth2.client.OAuth2RestTemplate">
+  <bean id="homeController"
+    class="org.springframework.security.oauth.examples.tonr.mvc.HomeController" />
+
+  <bean id="accountController"
+    class="org.springframework.security.oauth.examples.tonr.mvc.AccountController">
+    <property name="accountService" ref="accountService" />
+  </bean>
+
+  <bean id="oauth2RestTemplate"
+    class="org.springframework.security.oauth2.client.OAuth2RestTemplate">
     <constructor-arg ref="api" />
   </bean>
 
-	<bean id="accountService" class="org.springframework.security.oauth.examples.tonr.impl.AccountServiceImpl">
-		<property name="accountDetailsURL" value="${accountDetailsURL}" />
-		<property name="oAuthRestTemplate" ref="oauth2RestTemplate" />
-	</bean>
+  <bean id="accountService"
+    class="org.springframework.security.oauth.examples.tonr.impl.AccountServiceImpl">
+    <property name="accountDetailsURL" value="${accountDetailsURL}" />
+    <property name="oAuthRestTemplate" ref="oauth2RestTemplate" />
+  </bean>
 
 </beans>
