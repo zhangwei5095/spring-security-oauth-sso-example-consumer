@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:sec="http://www.springframework.org/schema/security"
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+  xmlns:sec="http://www.springframework.org/schema/security"
 	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd
@@ -11,30 +13,32 @@
     
   <context:property-placeholder location="classpath:/oauth2.properties"/>
 
-	<http access-denied-page="/login.jsp" xmlns="http://www.springframework.org/schema/security">
-		<intercept-url pattern="/account" access="ROLE_USER" />
-		<intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
-
-		<form-login authentication-failure-url="/login.jsp" default-target-url="/index.jsp" login-page="/login.jsp"
-			login-processing-url="/login.do" />
-		<logout logout-success-url="/index.jsp" logout-url="/logout.do" />
-		<anonymous />
-		<custom-filter ref="oauth2ClientFilter" after="EXCEPTION_TRANSLATION_FILTER" />
+	<http xmlns="http://www.springframework.org/schema/security" entry-point-ref="loginEntryPoint"
+    disable-url-rewriting="true">
+		<intercept-url pattern="/**" access="ROLE_USER" />
+		<logout logout-success-url="/index.jsp" logout-url="/logout" />
+    <anonymous enabled="false" />
+    <custom-filter ref="oauthExceptionFilter" after="EXCEPTION_TRANSLATION_FILTER" />
+    <custom-filter ref="oauthSSOFilter" before="FILTER_SECURITY_INTERCEPTOR" />
 	</http>
 
-	<authentication-manager xmlns="http://www.springframework.org/schema/security">
-		<authentication-provider>
-			<user-service>
-				<user name="marissa" password="wombat" authorities="ROLE_USER" />
-				<user name="sam" password="kangaroo" authorities="ROLE_USER" />
-			</user-service>
-		</authentication-provider>
-	</authentication-manager>
+  <bean id="loginEntryPoint" class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+    <constructor-arg value="/login" />
+  </bean>
+
+  <sec:authentication-manager alias="authenticationManager"/>
 
 	<!--apply the oauth client context -->
-	<oauth:client id="oauth2ClientFilter" redirect-on-error="${redirectOnError:false}" />
+	<oauth:client id="oauthExceptionFilter" />
+  
+  <bean id="oauthSSOFilter" class="org.springframework.security.oauth.examples.tonr.OAuthSSOFilter">
+    <constructor-arg value="/login" />
+    <property name="authenticationManager" ref="authenticationManager" />
+    <property name="restTemplate" ref="oauth2RestTemplate" />
+    <property name="userInfoUrl" value="${accountDetailsURL}" />
+  </bean>
 
-	<oauth:resource id="oauth2Resource" type="authorization_code" client-id="tonr" client-secret="secret" 
+	<oauth:resource id="api" type="authorization_code" client-id="tonr" client-secret="secret" 
 		access-token-uri="${accessTokenUri}" user-authorization-uri="${userAuthorizationUri}" scope="read" />
   
   <mvc:annotation-driven />
@@ -49,14 +53,14 @@
 	<bean id="accountController" class="org.springframework.security.oauth.examples.tonr.mvc.AccountController">
 		<property name="accountService" ref="accountService" />
 	</bean>
+  
+  <bean id="oauth2RestTemplate" class="org.springframework.security.oauth2.client.OAuth2RestTemplate">
+    <constructor-arg ref="api" />
+  </bean>
 
 	<bean id="accountService" class="org.springframework.security.oauth.examples.tonr.impl.AccountServiceImpl">
 		<property name="accountDetailsURL" value="${accountDetailsURL}" />
-		<property name="oAuthRestTemplate">
-			<bean class="org.springframework.security.oauth2.client.OAuth2RestTemplate">
-				<constructor-arg ref="oauth2Resource" />
-			</bean>
-		</property>
+		<property name="oAuthRestTemplate" ref="oauth2RestTemplate" />
 	</bean>
 
 </beans>
